@@ -1,0 +1,172 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  eventbridge-integration-solution-plaid-user-state-driven-call
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: Amazon-EventBridge-Integration-Solution-KARTE-User-State-Driven-Call
+    Description: This application demonstrates an integration with AWS Lambda, and Amazon Connect for KARTE of Amazon EventBridge SaaS Partner PLAID
+    Author: AWS Quick Start
+    LicenseUrl: LICENSE
+    ReadmeUrl: README.md
+    Labels:
+      - amazon
+      - eventbridge
+      - integration
+      - solution
+      - aws
+      - lambda
+      - amazon_connect
+      - plaid
+      - call
+    HomePageUrl: https://aws.amazon.com/quickstart/eventbridge/plaid-user-state-driven-call/
+    SemanticVersion: 0.1.0
+    SourceCodeUrl: https://github.com/aws-quickstart/eventbridge-integration-solution-plaid-user-state-driven-call
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Amazon EventBridge Integration Solution
+        Parameters:
+          - EventSourceName
+          - ConnectRegion
+          - ConnectInstanceId
+          - ConnectContactFlowId
+          - ConnectSourcePhoneNumber
+    ParameterLabels:
+      EventSourceName:
+        default: Event Source Name
+      ConnectRegion:
+        default: Amazon Connect Region
+      ConnectInstanceId:
+        default: Amazon Connect Instance Id
+      ConnectContactFlowId:
+        default: Amazon Connect Contact Flow Id
+      ConnectSourcePhoneNumber:
+        default: Amazon Connect Source Phone number
+
+Parameters:
+  EventSourceName:
+    Type: String
+    AllowedPattern: ^aws\.partner\/karte.io(\/[\.\-_a-z0-9]+){3}$
+    MinLength: 1
+    MaxLength: 256
+    Description: Name of the Amazon EventBridge KARTE Event Source to associate with an Event Bus. For example, aws.partner/karte.io/{AWSAccountID}/{KARTEProjectId}/{AppName}
+  ConnectRegion:
+    Type: String
+    Default: ap-northeast-1
+    Description: The Amazon Connect region used to call Amazon Connect api
+  ConnectInstanceId:
+    Type: String
+    Description: The Amazon Connect instance id used to call Amazon Connect api
+  ConnectContactFlowId:
+    Type: String
+    Description: The Amazon Connect contact flow used to call Amazon Connect api
+  ConnectSourcePhoneNumber:
+    Type: String
+    Description: The Amazon Connect source phone number used to call Amazon Connect api
+  SNSTopicName:
+    Type: String
+    MinLength: 1
+    MaxLength: 30
+    Description: Topic name of the Amazon SNS used to send EventBridge events to the AWS Lambda. This name can be set arbitrarily within 30 characters.
+
+Globals:
+  Function:
+    Timeout: 30
+    Environment:
+      Variables:
+        connect_region: !Ref ConnectRegion
+        connect_instance_id: !Ref ConnectInstanceId
+        connect_contact_flow_id: !Ref ConnectContactFlowId
+        connect_source_phone_number: !Ref ConnectSourcePhoneNumber
+Resources:
+  #############
+  #  SNS  #
+  #############
+
+  UserStateDrivenCallTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub
+        - UserStateDrivenCallTopic-${TopicName}
+        - { TopicName: !Ref SNSTopicName }
+
+  #############
+  #  Lambda  #
+  #############
+  MakeCall:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/make_call
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Policies:
+        - AmazonConnect_FullAccess
+        - SNSCrudPolicy:
+            TopicName:
+              Fn::GetAtt:
+                - UserStateDrivenCallTopic
+                - TopicName
+      Events:
+        SubscribedTopic:
+          Properties:
+            Topic:
+              Ref: UserStateDrivenCallTopic
+          Type: SNS
+
+  #################
+  #  EventBridge  #
+  #################
+  EventBridgeEventBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: !Ref EventSourceName
+      EventSourceName: !Ref EventSourceName
+
+  EventBridgeRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: catch-all rule for event bus
+      EventBusName: !Ref EventBridgeEventBus
+      EventPattern:
+        account:
+          - !Ref AWS::AccountId
+        detail-type:
+          - 'KARTE Action'
+        detail:
+          name:
+            - karte_ivr_call_request
+      Name: user-state-driven-call
+      State: ENABLED
+      Targets:
+        - Arn:
+            Ref: UserStateDrivenCallTopic
+          Id: !GetAtt UserStateDrivenCallTopic.TopicName
+
+  EventTopicPolicy:
+    Type: 'AWS::SNS::TopicPolicy'
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: 'sns:Publish'
+            Resource: '*'
+      Topics:
+        - !Ref UserStateDrivenCallTopic
+
+Outputs:
+  EventBridgeEventBus:
+    Description: SaaS Event Bus ARN
+    Value: !GetAtt EventBridgeEventBus.Arn
+  EventBridgeRule:
+    Description: EventBridge Rule ARN
+    Value: !GetAtt EventBridgeRule.Arn
+  MakeCallFunction:
+    Description: MakeCall Function ARN
+    Value: !GetAtt MakeCall.Arn
+  UserStateDrivenCallTopic:
+    Description: UserStateDrivenCallTopic TopicName
+    Value: !GetAtt UserStateDrivenCallTopic.TopicName

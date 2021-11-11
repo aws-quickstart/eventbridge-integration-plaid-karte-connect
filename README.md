@@ -1,8 +1,13 @@
+# eventbridge-integration-solution-karte-user-state-driven-call
+## Amazon EventBridge Integration Solution: Approach offline end users with Amazon Connect
 
-## quickstart-integration-solution-plaid-karte—Quick Start
+This Quick Start deploys an integration with Amazon Connect, AWS Lambda and AWS SNS for Amazon EventBridge SaaS Partner Integrations with PLAID.
 
-For architectural details, step-by-step instructions, and customization options, see the [deployment guide](https://aws-quickstart.github.io/quickstart-integration-solution-plaid-karte/).
+By combining KARTE's user data with Amazon Connect, you can create a flow that forwards inquiries to the most appropriate destination for that end user.
 
-To post feedback, submit feature ideas, or report bugs, use the **Issues** section of this GitHub repo. 
 
-To submit code for this Quick Start, see the [AWS Quick Start Contributor's Kit](https://aws-quickstart.github.io/).
+![Quick Start architecture for EventBridge Integration Solution for KARTE User State Driven Call](images/arch-eventbridge-karte-user-state-driven-call.png)
+
+
+To post feedback, submit feature ideas, or report bugs, use the Issues section of [this GitHub repo](https://github.com/aws-quickstart/eventbridge-integration-solution-karte-user-state-driven-call).
+
