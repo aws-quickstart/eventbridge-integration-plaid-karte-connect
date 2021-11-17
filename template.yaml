@@ -1,11 +1,13 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  eventbridge-integration-solution-plaid-user-state-driven-call
+  eventbridge-integration-solution-plaid-karte-connect
+  
+  (qs-1sfl5n335)
 
 Metadata:
   AWS::ServerlessRepo::Application:
-    Name: Amazon-EventBridge-Integration-Solution-KARTE-User-State-Driven-Call
+    Name: Amazon-EventBridge-Integration-Solution-Plaid-KARTE-Connect
     Description: This application demonstrates an integration with AWS Lambda, and Amazon Connect for KARTE of Amazon EventBridge SaaS Partner PLAID
     Author: AWS Quick Start
     LicenseUrl: LICENSE
