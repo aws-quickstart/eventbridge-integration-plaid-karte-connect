@@ -1,5 +1,5 @@
 # eventbridge-integration-solution-karte-user-state-driven-call
-## Amazon EventBridge Integration
+## Amazon EventBridge Integration for PLAID KARTE Connect
 
 This Amazon EventBridge integration combines the PLAID KARTE software as a service (SaaS) with Amazon Connect, Amazon Web Services (AWS) Lambda, and Amazon EventBridge to route inquiries to the most appropriate destinations.
 
